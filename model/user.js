@@ -8,19 +8,22 @@ function login(response,data)
     var responseData = {};
     graph.setAccessToken(data.FBToken);
     graph.get("me?fields=id,name", function(err, res) {
+        if(err)
+        {
+            if(!debug) return errorResponse(response, "fb auth failed");
+            return errorResponse(response, err);
+        }
         checkAccount(res.id, res.name, data.GCMID);
     });
     function checkAccount(fbid, name, gcmId)
     {
-        connection.query("select uid, token from user where FBID = ?", fbid, function(err, userInfo){
+        connection.query("select uid, token from user where FBID = ?", [fbid], function(err, userInfo){
             if(err)
             {
                 if(!debug) return errorResponse(response, "login failed");
                 console.log(err);
                 return errorResponse(response, err);
             }
-            console.log(fbid);
-            console.log(userInfo);
             if(userInfo.length==0)
             {
                 var token = uuid.v1();
@@ -45,6 +48,7 @@ function login(response,data)
         })
     }
 }
+
 function errorResponse(response, errorMsg)
 {
     var responseData = {};
