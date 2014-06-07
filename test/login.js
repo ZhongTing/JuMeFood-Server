@@ -6,7 +6,5 @@ var data = JSON.stringify({
 });
 
 test("/login",data,function(data){
-	console.log(data+"123");
+	console.log(data);
 });
-
-
