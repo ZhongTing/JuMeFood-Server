@@ -31,7 +31,7 @@ function accept(response, data)
 	response.end();
 	connection.query(sql, [data.rid, data.token], function(err, result){
 		if(err)return printError(err, data.token, "accept invitation failed");
-		mqtt.action(data.token, "accept invitation", {rid:data.rid});
+		mqtt.action(data.token, "acceptInvitation", {rid:data.rid});
 	})
 }
 
@@ -44,7 +44,7 @@ function refuse(response, data)
 	response.end();
 	connection.query(sql, [data.rid, data.token], function(err, result){
 		if(err)return printError(err, data.token, "refuse invitation failed");
-		mqtt.action(data.token, "refuse invitation", {rid:data.rid});
+		mqtt.action(data.token, "refuseInvitation", {rid:data.rid});
 	})
 }
 
