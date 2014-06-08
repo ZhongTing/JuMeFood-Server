@@ -8,26 +8,22 @@ function login(response,data)
     var responseData = {};
     graph.setAccessToken(data.FBToken);
     graph.get("me?fields=id,name", function(err, res) {
-        if(err)
-        {
-            if(!debug) return errorResponse(response, "fb auth failed");
-            return errorResponse(response, err);
-        }
-        doLogin(res.id, res.name, data.GCMID);
+        if(err)return printError(err, response, "fb auth failed");
+        graph.get("me/picture?width=100&height=100&redirect=false", function(err, photoRes){
+            if(err)return printError(err, response, "fb auth failed");
+            doLoginOrSignUp(res.id, res.name, data.GCMID, photoRes.data.url);
+        })
+        
     });
-    function doLogin(fbid, name, gcmId)
+    function doLoginOrSignUp(fbid, name, gcmId, url)
     {
         connection.query("select uid, token from user where FBID = ?", [fbid], function(err, userInfo){
-            if(err)
-            {
-                if(!debug) return errorResponse(response, "login failed");
-                console.log(err);
-                return errorResponse(response, err);
-            }
+            if(err)return printError(err, response, "login failed")
             if(userInfo.length==0)
             {
                 var token = uuid.v1();
-                var insertData = {"FBID":fbid, "name":name, "gcmId":gcmId, "token":token};
+                var insertData = {"FBID":fbid, "name":name, "gcmId":gcmId, "token":token, "photo":url};
+                console.log(insertData);
                 connection.query("insert into user set ?", insertData, function(err, insertResult){
                     if(err)
                     {
@@ -49,6 +45,15 @@ function login(response,data)
     }
 }
 
+function printError(err, response, errMsg)
+{
+    if(err)
+    {
+        if(!debug) return errorResponse(response, errMsg);
+        console.log(err);
+        return errorResponse(response, err);
+    }
+}
 function errorResponse(response, errorMsg)
 {
     var responseData = {};

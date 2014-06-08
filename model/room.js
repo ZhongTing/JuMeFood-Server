@@ -30,12 +30,14 @@ function create(response, data)
 		WHERE FBID IN "+memberListStr+" 							\
 		OR token = ?";
 	var queryRoomInfoSQL = "SELECT rid, title, UNIX_TIMESTAMP(time) as time, 	\
-		masterUid, name	as masterName											\
+		masterUid, name	as masterName, photo									\
 		FROM room, user 														\
 		WHERE rid = ? and user.uid = masterUid";
 	response.end();
 	connection.query(createRoomSQL, [data.name, data.time, data.token], function(err, roomResult){
 		if(err)return printError(err, data.token, "create room failed");
+		console.log(roomResult);
+		if(roomResult.affectedRows==0)return mqtt.action(data.token, "error", "token error");
 		var addMemberData = [roomResult.insertId, data.token];
 		connection.query(addMemberSQL, addMemberData, function(err, result){
 			if(err)return printError(err, data.token, "add member failed");
