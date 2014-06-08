@@ -13,5 +13,6 @@ handle["/createRoom"] = room.create;
 handle["/listRooms"] = room.list;
 handle["/listRoomMembers"] = room.members;
 handle["/listInvited"] = invitation.list;
+handle["/acceptInvitation"] = invitation.accept;
 
 server.start(router.route, handle);

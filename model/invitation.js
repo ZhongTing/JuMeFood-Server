@@ -22,4 +22,18 @@ function list(response, data)
 	})
 }
 
+function accept(response, data)
+{
+	var sql = "UPDATE roommember as m, user	\
+		SET isAccept = 1					\
+		WHERE rid = ? AND token = ?			\
+		AND user.uid = m.uid";
+	response.end();
+	connection.query(sql, [data.rid, data.token], function(err, result){
+		if(err)return printError(err, data.token, "accept invitation failed");
+		mqtt.action(data.token, "accept invitation", {rid:data.rid});
+	})
+}
+
 exports.list = list;
+exports.accept = accept;
