@@ -1,18 +1,7 @@
 var connection = require("./db").connection;
 var mqtt = require("./mqtt");
 var gcm = require("./gcm");
-var debug = true;
-
-function printError(err, token, errMsg)
-{
-	if(err)
-	{
-		if(!debug)return mqtt.action(token, "error", errMsg);
-		console.log(errMsg);
-		console.log(err);
-		return mqtt.action(token, "error", err);
-	}
-}
+var printError = require("./common").printError
 
 function create(response, data)
 {
@@ -24,11 +13,14 @@ function create(response, data)
 	var queryMemberSQL = "SELECT uid, gcmId, token					\
 		FROM user													\
 		WHERE FBID IN "+memberListStr;
-	var addMemberSQL = "INSERT INTO roommember( rid, uid ) 			\
-		SELECT ?, uid												\
+	var addMemberSQL = "INSERT INTO roommember( rid, uid, isAccept)	\
+		SELECT ?, uid, 0											\
 		FROM user													\
 		WHERE FBID IN "+memberListStr+" 							\
-		OR token = ?";
+		UNION 														\
+		SELECT ?, uid, 1											\
+		FROM user													\
+		WHERE token = ?";
 	var queryRoomInfoSQL = "SELECT rid, title, UNIX_TIMESTAMP(time) as time, 	\
 		masterUid, name	as masterName, photo									\
 		FROM room, user 														\
@@ -38,7 +30,7 @@ function create(response, data)
 		if(err)return printError(err, data.token, "create room failed");
 		console.log(roomResult);
 		if(roomResult.affectedRows==0)return mqtt.action(data.token, "error", "token error");
-		var addMemberData = [roomResult.insertId, data.token];
+		var addMemberData = [roomResult.insertId,roomResult.insertId, data.token];
 		connection.query(addMemberSQL, addMemberData, function(err, result){
 			if(err)return printError(err, data.token, "add member failed");
 			connection.query(queryMemberSQL, function(err, memberInfo){
@@ -58,4 +50,29 @@ function create(response, data)
 	})
 }
 
+function list(response, data)
+{
+	var sql = "SELECT r. * 						\
+		FROM roommember	NATURAL JOIN user, (	\
+			SELECT rid, title, masterUid, name AS masterName, photo AS masterPhoto, UNIX_TIMESTAMP(TIME) as time\
+			FROM room INNER JOIN user 			\
+			ON room.masterUid = user.uid 		\
+			) AS r 								\
+		WHERE user.token = ?					\
+		AND roommember.rid = r.rid				\
+		AND isAccept = 1";
+	response.end();
+	connection.query(sql, [data.token], function(err,result){
+		if(err)return printError(err, data.token, "list invitation failed");
+		mqtt.action(data.token, "listRooms", result);
+	})
+}
+
+function members(response, data)
+{
+
+}
+
 exports.create = create;
+exports.list = list;
+exports.members = members;
