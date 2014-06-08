@@ -13,12 +13,12 @@ function create(response, data)
 	var queryMemberSQL = "SELECT uid, gcmId, token					\
 		FROM user													\
 		WHERE FBID IN "+memberListStr;
-	var addMemberSQL = "INSERT INTO roommember( rid, uid, isAccept)	\
-		SELECT ?, uid, 0											\
+	var addMemberSQL = "INSERT INTO roommember( rid, uid, status)	\
+		SELECT ?, uid, 'wait_decision'								\
 		FROM user													\
 		WHERE FBID IN "+memberListStr+" 							\
 		UNION 														\
-		SELECT ?, uid, 1											\
+		SELECT ?, uid, 'accept'										\
 		FROM user													\
 		WHERE token = ?";
 	var queryRoomInfoSQL = "SELECT rid, title, UNIX_TIMESTAMP(time) as time, 	\
@@ -60,7 +60,7 @@ function list(response, data)
 			) AS r 								\
 		WHERE user.token = ?					\
 		AND roommember.rid = r.rid				\
-		AND isAccept = 1";
+		AND status = 'accept'";
 	response.end();
 	connection.query(sql, [data.token], function(err,result){
 		if(err)return printError(err, data.token, "list invitation failed");
@@ -70,9 +70,33 @@ function list(response, data)
 
 function members(response, data)
 {
-
+	var sql = "SELECT m.uid, m.status, user.name, user.photo 	\
+		FROM roommember AS m 									\
+		NATURAL JOIN user										\
+		WHERE rid = ?";
+	response.end();
+	connection.query(sql, [data.rid], function(err, membersResult){
+		if(err)return printError(err, data.token, "listRoomMembers failed");
+		var result = {};
+		result.rid = data.rid;
+		result.members = membersResult;
+		mqtt.action(data.token, "listRoomMembers", result);
+	})
 }
 
+function quit(response, data)
+{
+	var sql = "UPDATE roommember as m, user	\
+		SET status = 'quit'					\
+		WHERE rid = ? AND token = ?			\
+		AND user.uid = m.uid";
+	response.end();
+	connection.query(sql, [data.rid, data.token], function(err, result){
+		if(err)return printError(err, data.token, "quit room failed");
+		mqtt.action(data.token, "quitRoom", {rid:data.rid});
+	})
+}
 exports.create = create;
 exports.list = list;
 exports.members = members;
+exports.quit = quit;

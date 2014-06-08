@@ -14,7 +14,7 @@ function list(response, data)
 			) AS r 								\
 		WHERE user.token = ?					\
 		AND roommember.rid = r.rid				\
-		AND isAccept =0";
+		AND status = 'wait_decision'";
 	response.end();
 	connection.query(sql, [data.token], function(err,result){
 		if(err)return printError(err, data.token, "list invitation failed");
@@ -25,7 +25,7 @@ function list(response, data)
 function accept(response, data)
 {
 	var sql = "UPDATE roommember as m, user	\
-		SET isAccept = 1					\
+		SET status = 'accept'				\
 		WHERE rid = ? AND token = ?			\
 		AND user.uid = m.uid";
 	response.end();
@@ -35,5 +35,19 @@ function accept(response, data)
 	})
 }
 
+function refuse(response, data)
+{
+	var sql = "UPDATE roommember as m, user	\
+		SET status = 'refuse'				\
+		WHERE rid = ? AND token = ?			\
+		AND user.uid = m.uid";
+	response.end();
+	connection.query(sql, [data.rid, data.token], function(err, result){
+		if(err)return printError(err, data.token, "refuse invitation failed");
+		mqtt.action(data.token, "refuse invitation", {rid:data.rid});
+	})
+}
+
 exports.list = list;
 exports.accept = accept;
+exports.refuse = refuse;

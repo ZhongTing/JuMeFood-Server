@@ -10,6 +10,7 @@ var handle = {}
 handle["/login"] = user.login;
 handle["/listStore"] = store.list;
 handle["/createRoom"] = room.create;
+handle["/quitRoom"] = room.quit;
 handle["/listRooms"] = room.list;
 handle["/listRoomMembers"] = room.members;
 handle["/listInvited"] = invitation.list;
