@@ -13,9 +13,9 @@ function login(response,data)
             if(!debug) return errorResponse(response, "fb auth failed");
             return errorResponse(response, err);
         }
-        checkAccount(res.id, res.name, data.GCMID);
+        doLogin(res.id, res.name, data.GCMID);
     });
-    function checkAccount(fbid, name, gcmId)
+    function doLogin(fbid, name, gcmId)
     {
         connection.query("select uid, token from user where FBID = ?", [fbid], function(err, userInfo){
             if(err)
@@ -52,7 +52,7 @@ function login(response,data)
 function errorResponse(response, errorMsg)
 {
     var responseData = {};
-    responseData.error = errorMsg;
+    responseData.errors = errorMsg;
     response.writeHead(200, {"Content-Type": "text/plain"});
     response.write(JSON.stringify(responseData));
     response.end();
