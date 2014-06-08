@@ -9,7 +9,7 @@ function list(response, data)
 	connection.query("select sid, name, price, latitude, longitude from store", function(err, result){
 		if(err)
 		{
-			if(!debug)return mqtt.action(data.token, "error", errMsg);
+			if(!debug)return mqtt.action(data.token, "error", err);
 			console.log(err);
 			mqtt.action(data.token, "error", "list store failed");
 		}
