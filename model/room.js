@@ -94,6 +94,7 @@ function quit(response, data)
 	connection.query(sql, [data.rid, data.token], function(err, result){
 		if(err)return printError(err, data.token, "quit room failed");
 		mqtt.action(data.token, "quitRoom", {rid:data.rid});
+		//mqtt other
 	})
 }
 exports.create = create;

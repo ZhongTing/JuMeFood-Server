@@ -24,19 +24,40 @@ function list(response, data)
 
 function accept(response, data)
 {
-	var sql = "UPDATE roommember as m, user	\
-		SET status = 'accept'				\
-		WHERE rid = ? AND token = ?			\
+	//to do wait -> accept condiftion
+	var sql = "UPDATE roommember as m, user		\
+		SET status = 'accept'					\
+		WHERE rid = ? AND token = ?				\
 		AND user.uid = m.uid";
+	var memberSQL = "SELECT uid, status, token	\
+		FROM roommember AS m 					\
+		NATURAL JOIN user						\
+		WHERE rid = ? and status = 'accept'";
+	var meSQL = "SELECT uid, name, photo 		\
+		FROM user WHERE token = ?";
 	response.end();
-	connection.query(sql, [data.rid, data.token], function(err, result){
+	connection.query(memberSQL, [data.rid], function(err, memberResult){
 		if(err)return printError(err, data.token, "accept invitation failed");
-		mqtt.action(data.token, "acceptInvitation", {rid:data.rid});
-	})
+		connection.query(meSQL, [data.token], function(err, result){
+			if(err || result.length==0)
+				return printError(err, data.token, "accept invitation failed");
+			var boardcastData = result[0];
+			boardcastData.rid = data.rid;
+			connection.query(sql, [data.rid, data.token], function(err, result){
+				if(err)return printError(err, data.token, "accept invitation failed");
+				mqtt.action(data.token, "acceptInvitation", boardcastData);
+				for(var i in memberResult)
+				{
+					mqtt.action(memberResult[i].token,"acceptInvitation", boardcastData);
+				}
+			})
+		})
+	});
 }
 
 function refuse(response, data)
 {
+	// to do wait -> refuse condition
 	var sql = "UPDATE roommember as m, user	\
 		SET status = 'refuse'				\
 		WHERE rid = ? AND token = ?			\
@@ -45,6 +66,7 @@ function refuse(response, data)
 	connection.query(sql, [data.rid, data.token], function(err, result){
 		if(err)return printError(err, data.token, "refuse invitation failed");
 		mqtt.action(data.token, "refuseInvitation", {rid:data.rid});
+		//mqtt other
 	})
 }
 
