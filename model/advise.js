@@ -7,16 +7,17 @@ var checkRoomMemberStatus = require("./room").checkRoomMemberStatus;
 
 function list(response, data)
 {
-	var tag = data.tag;
+	var sql = "SELECT * FROM roomadvise WHERE rid = ?";
+	var roomSQL = "SELECT rid, goalUid FROM room WHERE rid = ?";
 	response.end();
-	connection.query("select sid, name, price, latitude, longitude from store", function(err, result){
-		if(err)
-		{
-			if(!debug)return mqtt.action(data.token, "error", err);
-			console.log(err);
-			mqtt.action(data.token, "error", "list store failed");
-		}
-		mqtt.action(data.token, "listStore", result);
+	connection.query(sql, [data.rid], function(err, advices){
+		if(err)return printError(err, data.token, "listRoomAdvices failed");
+		connection.query(roomSQL, [data.rid], function(err, room){
+			if(err)return printError(err, data.token, "listRoomAdvices failed");
+			var result = room[0];
+			result.advices = advices;
+			mqtt.action(data.token, "listRoomAdvices", result);
+		})
 	})
 }
 
