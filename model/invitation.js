@@ -3,6 +3,7 @@ var mqtt = require("./mqtt");
 var gcm = require("./gcm");
 var printError = require("./common").printError;
 var updateMemberStatus = require("./room").updateMemberStatus;
+var checkRoomMemberStatus = require("./room").checkRoomMemberStatus;
 
 function list(response, data)
 {
@@ -24,22 +25,26 @@ function list(response, data)
 
 function accept(response, data)
 {
-	//to do wait -> accept condiftion
 	var updateStatus = "accept";
 	var errorMsg = "accept invitation failed";
 	var actionName = "acceptInvitation";
 	response.end();
-	updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
+	checkRoomMemberStatus(data.rid, data.token, 'wait_decision', function(err){
+		if(err)return printError(err, data.token, err);
+		updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
+	});
 }
 
 function refuse(response, data)
 {
-	// to do wait -> refuse condition
 	var updateStatus = "refuse";
 	var errorMsg = "refuse invitation failed";
 	var actionName = "refuseInvitation";
 	response.end();
-	updateMemberStatus(data, updateStatus, errorMsg, actionName);
+	checkRoomMemberStatus(data.rid, data.token, 'wait_decision', function(err){
+		if(err)return printError(err, data.token, err);
+		updateMemberStatus(data, updateStatus, errorMsg, actionName);
+	});
 }
 
 exports.list = list;

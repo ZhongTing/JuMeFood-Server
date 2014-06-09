@@ -1,5 +1,5 @@
-var debug = true;
 var mqtt = require("./mqtt");
+var debug = true;
 
 function printError(err, token, errMsg)
 {

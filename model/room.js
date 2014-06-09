@@ -90,7 +90,10 @@ function quit(response, data)
 	var errorMsg = "quit room failed";
 	var actionName = "quitRoom";
 	response.end();
-	updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
+	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
+		if(err)return printError(err, data.token, "not in room");
+		updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
+	});
 }
 
 function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
@@ -125,9 +128,43 @@ function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
 	});
 }
 
+function notifyRoomMember(rid, actionName, data, errCallback)
+{
+	var memberSQL = "SELECT uid, token			\
+		FROM roommember AS m 					\
+		NATURAL JOIN user						\
+		WHERE rid = ? and status = 'accept'";
+	connection.query(memberSQL, [rid], function(err, result){
+		if(err)return errCallback(err);
+		for(var i in result)
+		{
+			mqtt.action(result[i].token, actionName, data);
+		}
+	});
+}
+
+function checkRoomMemberStatus(rid, token, status, callback)
+{
+	var memberSQL = "SELECT status				\
+		FROM roommember AS m 					\
+		NATURAL JOIN user						\
+		WHERE rid = ? and token = ?";
+	connection.query(memberSQL, [rid, token], function(err, result){
+		if(err)return callback(err);
+		if(result.length==0)return callback("member check failed");
+		if(result[0].status!==status)
+		{
+			err = "status not match, expect:"+status+" actual:"+result[0].status;
+		}
+		callback(err);
+	});
+}
+
 exports.create = create;
 exports.list = list;
 exports.members = members;
 exports.quit = quit;
 
 exports.updateMemberStatus = updateMemberStatus;
+exports.notifyRoomMember = notifyRoomMember;
+exports.checkRoomMemberStatus = checkRoomMemberStatus;
