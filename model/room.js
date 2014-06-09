@@ -86,18 +86,48 @@ function members(response, data)
 
 function quit(response, data)
 {
-	var sql = "UPDATE roommember as m, user	\
-		SET status = 'quit'					\
-		WHERE rid = ? AND token = ?			\
-		AND user.uid = m.uid";
+	var updateStatus = "quit";
+	var errorMsg = "quit room failed";
+	var actionName = "quitRoom";
 	response.end();
-	connection.query(sql, [data.rid, data.token], function(err, result){
-		if(err)return printError(err, data.token, "quit room failed");
-		mqtt.action(data.token, "quitRoom", {rid:data.rid});
-		//mqtt other
-	})
+	updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
 }
+
+function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
+{
+	var sql = "UPDATE roommember as m, user		\
+		SET status = '"+updateStatus+"'			\
+		WHERE rid = ? AND token = ?				\
+		AND user.uid = m.uid";
+	var memberSQL = "SELECT uid, status, token	\
+		FROM roommember AS m 					\
+		NATURAL JOIN user						\
+		WHERE rid = ? and status = 'accept'";
+	var meSQL = "SELECT uid, name, photo 		\
+		FROM user WHERE token = ?";
+	connection.query(memberSQL, [data.rid], function(err, memberResult){
+		if(err)return printError(err, data.token, errorMsg);
+		connection.query(meSQL, [data.token], function(err, result){
+			if(err || result.length==0)
+				return printError(err, data.token, errorMsg);
+			var boardcastData = result[0];
+			boardcastData.rid = data.rid;
+			connection.query(sql, [data.rid, data.token], function(err, result){
+				if(err)return printError(err, data.token, errorMsg);
+				if(mqttSelf)
+					mqtt.action(data.token, actionName, boardcastData);
+				for(var i in memberResult)
+				{
+					mqtt.action(memberResult[i].token, actionName, boardcastData);
+				}
+			})
+		})
+	});
+}
+
 exports.create = create;
 exports.list = list;
 exports.members = members;
 exports.quit = quit;
+
+exports.updateMemberStatus = updateMemberStatus;
