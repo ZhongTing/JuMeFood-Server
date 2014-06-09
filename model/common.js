@@ -10,6 +10,7 @@ function printError(err, token, errMsg)
 		console.log(err);
 		return mqtt.action(token, "error", err);
 	}
+	return mqtt.action(token, "error", errMsg);
 }
 
 exports.printError = printError;

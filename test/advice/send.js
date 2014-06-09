@@ -8,6 +8,6 @@ var data = JSON.stringify({
 	name : "test"
 });
 
-test("/sendAdvise",data,function(data){
+test("/sendAdvice",data,function(data){
 	console.log(data);
 });

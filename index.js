@@ -5,11 +5,12 @@ var user = require("./model/user");
 var store = require("./model/store");
 var room = require("./model/room");
 var invitation = require("./model/invitation");
-var advice = require("./model/advise");
+var advice = require("./model/advice");
 
 var handle = {}
 handle["/login"] = user.login;
 handle["/listStore"] = store.list;
+
 
 handle["/createRoom"] = room.create;
 handle["/quitRoom"] = room.quit;
@@ -21,6 +22,7 @@ handle["/acceptInvitation"] = invitation.accept;
 handle["/refuseInvitation"] = invitation.refuse;
 
 handle["/listRoomAdvices"] = advice.list;
-handle["/sendAdvise"] = advice.send;
+handle["/sendAdvice"] = advice.send;
+handle["/go"] = advice.go;
 
 server.start(router.route, handle);
