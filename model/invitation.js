@@ -25,8 +25,28 @@ function list(response, data)
 function accept(response, data)
 {
 	//to do wait -> accept condiftion
+	var updateStatus = "accept";
+	var errorMsg = "accept invitation failed";
+	var actionName = "acceptInvitation";
+	response.end();
+	updateMemberStatus(data, updateStatus, errorMsg, actionName);
+}
+
+function refuse(response, data)
+{
+	// to do wait -> refuse condition
+	var updateStatus = "refuse";
+	var errorMsg = "refuse invitation failed";
+	var actionName = "refuseInvitation";
+	response.end();
+	updateMemberStatus(data, updateStatus, errorMsg, actionName);
+}
+
+
+function updateMemberStatus(data, updateStatus, errorMsg, actionName)
+{
 	var sql = "UPDATE roommember as m, user		\
-		SET status = 'accept'					\
+		SET status = '"+updateStatus+"'			\
 		WHERE rid = ? AND token = ?				\
 		AND user.uid = m.uid";
 	var memberSQL = "SELECT uid, status, token	\
@@ -35,41 +55,24 @@ function accept(response, data)
 		WHERE rid = ? and status = 'accept'";
 	var meSQL = "SELECT uid, name, photo 		\
 		FROM user WHERE token = ?";
-	response.end();
 	connection.query(memberSQL, [data.rid], function(err, memberResult){
-		if(err)return printError(err, data.token, "accept invitation failed");
+		if(err)return printError(err, data.token, errorMsg);
 		connection.query(meSQL, [data.token], function(err, result){
 			if(err || result.length==0)
-				return printError(err, data.token, "accept invitation failed");
+				return printError(err, data.token, errorMsg);
 			var boardcastData = result[0];
 			boardcastData.rid = data.rid;
 			connection.query(sql, [data.rid, data.token], function(err, result){
-				if(err)return printError(err, data.token, "accept invitation failed");
-				mqtt.action(data.token, "acceptInvitation", boardcastData);
+				if(err)return printError(err, data.token, errorMsg);
+				mqtt.action(data.token, actionName, boardcastData);
 				for(var i in memberResult)
 				{
-					mqtt.action(memberResult[i].token,"acceptInvitation", boardcastData);
+					mqtt.action(memberResult[i].token, actionName, boardcastData);
 				}
 			})
 		})
 	});
 }
-
-function refuse(response, data)
-{
-	// to do wait -> refuse condition
-	var sql = "UPDATE roommember as m, user	\
-		SET status = 'refuse'				\
-		WHERE rid = ? AND token = ?			\
-		AND user.uid = m.uid";
-	response.end();
-	connection.query(sql, [data.rid, data.token], function(err, result){
-		if(err)return printError(err, data.token, "refuse invitation failed");
-		mqtt.action(data.token, "refuseInvitation", {rid:data.rid});
-		//mqtt other
-	})
-}
-
 exports.list = list;
 exports.accept = accept;
 exports.refuse = refuse;
