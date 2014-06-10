@@ -3,7 +3,7 @@ var connection = mysql.createConnection({
 	host: '140.124.181.190',
 	port: '3306',
 	user: 'keming',
-	password: '1421root',
+	password: 'root1421',
 	database: 'jumefood'
 });
 connection.connect();
