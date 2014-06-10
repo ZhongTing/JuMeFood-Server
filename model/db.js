@@ -1,9 +1,9 @@
 var mysql = require('mysql');
 var connection = mysql.createConnection({
-	host: '140.124.181.7',
-	port: '2819',
-	user: 'ISLab1221',
-	password: '1221',
+	host: '140.124.181.190',
+	port: '3306',
+	user: 'keming',
+	password: '1421root',
 	database: 'jumefood'
 });
 connection.connect();
