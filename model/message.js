@@ -8,7 +8,7 @@ var checkRoomMemberStatus = require("./room").checkRoomMemberStatus;
 function list(response, data)
 {
 	var actionName = "roomMsgs";
-	var sql = "SELECT m.uid, user.name, message, UNIX_TIMESTAMP(timestamp) as timestamp 	\
+	var sql = "SELECT m.mid, m.uid, user.name, message, UNIX_TIMESTAMP(timestamp) as timestamp 	\
 		FROM roommsg as m, user 															\
 		WHERE m.rid = ? and user.uid = m.uid";
 	
