@@ -79,6 +79,7 @@ function go(response, data)
 			}
 			var i = Math.round(Math.random(new Date) * (result.length - 1));
 			var boardcastData = {};
+			boardcastData.rid = data.rid;
 			boardcastData.goal = result[i].uid;
 			var updateData = [boardcastData.goal, data.rid];
 			connection.query("UPDATE room SET goalUid = ? WHERE rid = ?", updateData, function(err, result){
