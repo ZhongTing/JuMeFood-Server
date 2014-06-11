@@ -73,7 +73,7 @@ function members(response, data)
 	var sql = "SELECT m.uid, m.status, user.name, user.photo 	\
 		FROM roommember AS m 									\
 		NATURAL JOIN user										\
-		WHERE rid = ? and status = 'accept'";
+		WHERE rid = ?";
 	response.end();
 	connection.query(sql, [data.rid], function(err, membersResult){
 		if(err)return printError(err, data.token, "listRoomMembers failed");
