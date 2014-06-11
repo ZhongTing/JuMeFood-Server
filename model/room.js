@@ -92,6 +92,7 @@ function quit(response, data)
 	response.end();
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
 		if(err)return printError(err, data.token, "not in room");
+		
 		updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
 	});
 }

@@ -28,14 +28,14 @@ function send(response, data)
 	var sql = "insert into roommsg(rid,uid,message) select ?, uid,? from user where token = ?";
 	var querySQL = "SELECT m.mid, m.rid, m.uid, user.name, message, UNIX_TIMESTAMP(timestamp) as timestamp 	\
 		FROM roommsg as m, user 																\
-		WHERE m.rid = ? and user.uid = m.uid and user.token = ?";
+		WHERE m.mid = ? and user.uid = m.uid and user.token = ?";
 	var sqlData = [data.rid, data.message, data.token];
-	var queryData = [data.rid, data.token];
 	response.end();
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
 		if(err)return printError(err, data.token, "not in room");
 		connection.query(sql, sqlData, function(err, result){
 			if(err)return printError(err, data.token, errorMsg);
+			var queryData = [result.insertId, data.token];
 			connection.query(querySQL, queryData, function(err, result){
 				if(err||result.length==0)
 					return printError(err, data.token, errorMsg);

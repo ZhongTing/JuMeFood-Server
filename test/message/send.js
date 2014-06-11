@@ -4,7 +4,7 @@ var data = JSON.stringify({
     token : "8e78e650-ef10-11e3-b2dd-0b0144f9b7e1",
     // token : 123,
     rid : 3,
-    message : "test test test"
+    message : "test test test3"
 });
 
 test("/sendMsg",data,function(data){
