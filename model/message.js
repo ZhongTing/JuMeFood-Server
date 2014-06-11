@@ -41,6 +41,12 @@ function send(response, data)
 					return printError(err, data.token, errorMsg);
 				notifyRoomMember(data.rid, actionName, result[0], function(err){
 					if(err)printError(err, data.token, "unable to mqtt other member to send advice");
+				}, function(members){
+					for(var i in members)
+					{
+						var gcmMsg = "you have new message from " + result[0].name;
+						gcm.send(members[i].gcmId, gcmMsg);
+					}
 				})
 			})
 		})

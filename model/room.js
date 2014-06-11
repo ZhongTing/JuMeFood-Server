@@ -129,9 +129,9 @@ function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
 	});
 }
 
-function notifyRoomMember(rid, actionName, data, errCallback)
+function notifyRoomMember(rid, actionName, data, errCallback, resultCallback)
 {
-	var memberSQL = "SELECT uid, token			\
+	var memberSQL = "SELECT uid, token, gcmId	\
 		FROM roommember AS m 					\
 		NATURAL JOIN user						\
 		WHERE rid = ? and status = 'accept'";
@@ -141,6 +141,7 @@ function notifyRoomMember(rid, actionName, data, errCallback)
 		{
 			mqtt.action(result[i].token, actionName, data);
 		}
+		if(resultCallback)resultCallback(result);
 	});
 }
 
