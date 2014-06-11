@@ -26,7 +26,7 @@ function send(response, data)
 	var errorMsg = "sendMsg failed";
 	var actionName = "sendMsg";
 	var sql = "insert into roommsg(rid,uid,message) select ?, uid,? from user where token = ?";
-	var querySQL = "SELECT m.uid, user.name, message, UNIX_TIMESTAMP(timestamp) as timestamp 	\
+	var querySQL = "SELECT m.mid, m.rid, m.uid, user.name, message, UNIX_TIMESTAMP(timestamp) as timestamp 	\
 		FROM roommsg as m, user 																\
 		WHERE m.rid = ? and user.uid = m.uid and user.token = ?";
 	var sqlData = [data.rid, data.message, data.token];
