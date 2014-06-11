@@ -11,13 +11,13 @@ function login(response,data)
         if(err)return printError(err, response, "fb auth failed");
         graph.get("me/picture?width=100&height=100&redirect=false", function(err, photoRes){
             if(err)return printError(err, response, "fb auth failed");
-            doLoginOrSignUp(res.id, res.name, data.GCMID, photoRes.data.url);
+            doLoginOrSignUp(res.id, res.name, data.GCMId, photoRes.data.url);
         })
         
     });
     function doLoginOrSignUp(fbid, name, gcmId, url)
     {
-        connection.query("select uid, token from user where FBID = ?", [fbid], function(err, userInfo){
+        connection.query("select uid, token, name, FBID as FBId, photo from user where FBID = ?", [fbid], function(err, userInfo){
             if(err)return printError(err, response, "login failed")
             if(userInfo.length==0)
             {
@@ -31,7 +31,7 @@ function login(response,data)
                         console.log(err);
                         return errorResponse(response, err);
                     }
-                    var userInfo = {"uid":insertResult.insertId,"token":token};
+                    var userInfo = {"FBId":fbid, "name":name, "uId":insertResult.insertId, "token":token, "photo":url};
                     response.write(JSON.stringify(userInfo));
                     response.end();
                 })
