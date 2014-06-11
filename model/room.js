@@ -14,7 +14,7 @@ function create(response, data)
 		FROM user													\
 		WHERE FBID IN "+memberListStr;
 	var addMemberSQL = "INSERT INTO roommember( rid, uid, status)	\
-		SELECT ?, uid, 'wait_decision'								\
+		SELECT ?, uid, 'accept'								\
 		FROM user													\
 		WHERE FBID IN "+memberListStr+" 							\
 		UNION 														\
