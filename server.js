@@ -14,9 +14,8 @@ function start(route, handle) {
         });
 
         request.addListener("end", function() {
+            console.log("postData: " + postData);
             postData = JSON.parse(postData);
-            console.log("postData");
-            console.log(postData);
             route(handle, pathname, response, postData);
         });
 
