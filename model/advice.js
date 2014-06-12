@@ -29,7 +29,7 @@ function send(response, data)
 	var updateSQL = "UPDATE roomadvice as a, user SET ?? = NULL , ?? = ?	\
 		WHERE  rid = ? AND  a.uid = user.uid and user.token = ?;"
 	var querySQL = "SELECT r.*, s.name, s.price, user.name as userName FROM roomadvice AS r \
-		INNER JOIN store as s ON r.sid = s.sid	\
+		LEFT JOIN store as s ON r.sid = s.sid	\
 		INNER JOIN user ON r.uid = user.uid			\
 		WHERE rid = ? and token = ?";
 	var errorMsg = "addAdvice failed";
@@ -40,9 +40,9 @@ function send(response, data)
 		sqlData = ["sid", data.sid, data.rid, data.token];
 		updateData = ["customName"].concat(sqlData);
 	}
-	else if(data.customName)
+	else if(data.name)
 	{
-		sqlData = ["customName", data.customName, data.rid, data.token];
+		sqlData = ["customName", data.name, data.rid, data.token];
 		updateData = ["sid"].concat(sqlData);
 	}
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
@@ -52,8 +52,9 @@ function send(response, data)
 			{
 				if(err.code == "ER_DUP_ENTRY")
 				{
-					errorMsg = "already has advice";
+					// errorMsg = "already has advice";
 					return connection.query(updateSQL, updateData, function(err, result){
+						console.log(result);
 						next();
 					})
 				}
