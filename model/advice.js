@@ -85,19 +85,23 @@ function go(response, data)
 		FROM ( SELECT uid FROM user WHERE token = ?) AS u,  		\
 		( SELECT masterUid, goalUid FROM room WHERE rid = ?) AS r,	\
 		( SELECT COUNT(*) AS count FROM roommember WHERE rid = ?) AS m";
+	var queryAdviceSQL = "SELECT r.*, s.name 	\
+		FROM roomadvice as r 					\
+		natural join store as s 				\
+		WHERE rid = ?"
 	response.end();
 	connection.query(infoSQL, [data.token, data.rid, data.rid], function(err, info){
 		if(err)return printError(err, data.token, "go failed");
 		console.log(info[0]);
 		if(info[0].goalUid!=null)
 		{
-			return printError(err, data.token, "already have goal");
+			// return printError(err, data.token, "already have goal");
 		}
 		if(info[0].uid !== info[0].masterUid)
 		{
 			return printError(err, data.token, "not master");
 		}
-		connection.query("SELECT * FROM roomadvice WHERE rid = ?", [data.rid], function(err, result){
+		connection.query(queryAdviceSQL, [data.rid], function(err, result){
 			if(err)return printError(err, data.token, "go failed");
 			if(result.length*2 < info[0].count)
 			{
@@ -107,11 +111,15 @@ function go(response, data)
 			var boardcastData = {};
 			boardcastData.rid = data.rid;
 			boardcastData.goal = result[i].uid;
+			var itemName = result[i].name;
+			if(!itemName)itemName = result[i].customName;
 			var updateData = [boardcastData.goal, data.rid];
 			connection.query("UPDATE room SET goalUid = ? WHERE rid = ?", updateData, function(err, result){
 				if(err)return printError(err, data.token, "update goalUid failed");
 				if(result.affectedRows.length==0)
 					return printError(err, data.token, "update goalUid failed");
+				var msg = "室長轉出了---"+itemName;
+				message.send(response, {"rid":data.rid,"token":data.token,"message":msg});
 				notifyRoomMember(data.rid, actionName, boardcastData, function(err){
 					if(err)printError(err, data.token, "unable to mqtt other member to send advice");
 				})
