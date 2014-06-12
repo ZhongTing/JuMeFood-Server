@@ -4,6 +4,7 @@ var gcm = require("./gcm");
 var printError = require("./common").printError;
 var notifyRoomMember = require("./room").notifyRoomMember;
 var checkRoomMemberStatus = require("./room").checkRoomMemberStatus;
+var message = require("./message");
 
 function list(response, data)
 {
@@ -27,7 +28,8 @@ function send(response, data)
 	var sql = "insert into roomadvice(uid,??,rid) select uid,?,? from user where token = ?";
 	var updateSQL = "UPDATE roomadvice as a, user SET ?? = NULL , ?? = ?	\
 		WHERE  rid = ? AND  a.uid = user.uid and user.token = ?;"
-	var querySQL = "SELECT r.* FROM roomadvice AS r \
+	var querySQL = "SELECT r.*, s.name, s.price, user.name as userName FROM roomadvice AS r \
+		INNER JOIN store as s ON r.sid = s.sid	\
 		INNER JOIN user ON r.uid = user.uid			\
 		WHERE rid = ? and token = ?";
 	var errorMsg = "addAdvice failed";
@@ -43,7 +45,6 @@ function send(response, data)
 		sqlData = ["customName", data.customName, data.rid, data.token];
 		updateData = ["sid"].concat(sqlData);
 	}
-	console.log(updateData);
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
 		if(err)return printError(err, data.token, "not in room");
 		connection.query(sql, sqlData, function(err, result){
@@ -53,16 +54,21 @@ function send(response, data)
 				{
 					errorMsg = "already has advice";
 					return connection.query(updateSQL, updateData, function(err, result){
-						query();
+						next();
 					})
 				}
 				else return printError(err, data.token, errorMsg);
 			}
-			query();
-			function query(){
+			next();
+			function next(){
 				connection.query(querySQL, [data.rid, data.token], function(err, result){
+					if(err||result.length==0)return printError(err, data.token, errorMsg);
 					var actionName = "sendAdvice";
-					notifyRoomMember(data.rid, actionName, result, function(err){
+					var itemName = result[0].name;
+					if(!itemName)itemName = result[0].customName;
+					var msg = result[0].userName + "推薦了" + itemName;
+					message.send(response, {"rid":data.rid,"token":data.token,"message":msg});
+					notifyRoomMember(data.rid, actionName, result[0], function(err){
 						if(err)printError(err, data.token, "unable to mqtt other member to send advice");
 					})
 				})
