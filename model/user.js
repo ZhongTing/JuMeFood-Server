@@ -23,14 +23,8 @@ function login(response,data)
             {
                 var token = uuid.v1();
                 var insertData = {"FBID":fbid, "name":name, "gcmId":gcmId, "token":token, "photo":url};
-                console.log(insertData);
                 connection.query("insert into user set ?", insertData, function(err, insertResult){
-                    if(err)
-                    {
-                        if(!debug) return errorResponse(response, "login failed");
-                        console.log(err);
-                        return errorResponse(response, err);
-                    }
+                    if(err)return printError(err, response,  "login failed");
                     var userInfo = {"FBId":fbid, "name":name, "uId":insertResult.insertId, "token":token, "photo":url};
                     response.write(JSON.stringify(userInfo));
                     response.end();
@@ -38,8 +32,11 @@ function login(response,data)
             }
             else
             {
-                response.write(JSON.stringify(userInfo[0]));
-                response.end();
+                var updateSQL = "update user set gcmId = ? where FBID = ?";
+                connection.query(updateSQL, [gcmId, fbid], function(err, updateResult){
+                    response.write(JSON.stringify(userInfo[0]));
+                    response.end();
+                });
             }
         })
     }
