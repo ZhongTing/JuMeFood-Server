@@ -1,11 +1,16 @@
 var mqtt = require("./mqtt");
-var debug = true;
+var debug = false;
 
 function printError(err, token, errMsg)
 {
 	if(err)
 	{
-		if(!debug)return mqtt.action(token, "error", errMsg);
+		if(!debug)
+		{
+			var errObj = {};
+			errObj.errors = errMsg;
+			return mqtt.action(token, "error", errObj);
+		}
 		console.log(errMsg);
 		console.log(err);
 		return mqtt.action(token, "error", err);
