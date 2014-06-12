@@ -7,7 +7,7 @@ var checkRoomMemberStatus = require("./room").checkRoomMemberStatus;
 
 function list(response, data)
 {
-	var sql = "SELECT * FROM roomadvice WHERE rid = ?";
+	var sql = "SELECT * FROM  `roomadvice` NATURAL JOIN store WHERE rid = ?";
 	var roomSQL = "SELECT rid, goalUid FROM room WHERE rid = ?";
 	response.end();
 	connection.query(sql, [data.rid], function(err, advices){
@@ -23,30 +23,50 @@ function list(response, data)
 
 function send(response, data)
 {
-	var sqlData;
-	var sql = "insert into roomadvice(rid,uid,??) select ?,uid,? from user where token = ?";
+	var sqlData,updateData;
+	var sql = "insert into roomadvice(uid,??,rid) select uid,?,? from user where token = ?";
+	var updateSQL = "UPDATE roomadvice as a, user SET ?? = NULL , ?? = ?	\
+		WHERE  rid = ? AND  a.uid = user.uid and user.token = ?;"
 	var querySQL = "SELECT r.* FROM roomadvice AS r \
 		INNER JOIN user ON r.uid = user.uid			\
 		WHERE rid = ? and token = ?";
 	var errorMsg = "addAdvice failed";
 	response.end();
 
-	if(data.sid)sqlData = ["sid", data.rid, data.sid, data.token]
-	else if(data.name)sqlData = ["name", data.rid, data.name, data.token]
+	if(data.sid)
+	{
+		sqlData = ["sid", data.sid, data.rid, data.token];
+		updateData = ["customName"].concat(sqlData);
+	}
+	else if(data.customName)
+	{
+		sqlData = ["customName", data.customName, data.rid, data.token];
+		updateData = ["sid"].concat(sqlData);
+	}
+	console.log(updateData);
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
 		if(err)return printError(err, data.token, "not in room");
 		connection.query(sql, sqlData, function(err, result){
 			if(err)
 			{
-				if(err.code == "ER_DUP_ENTRY")errorMsg = "already has advice";
-				return printError(err, data.token, errorMsg);
+				if(err.code == "ER_DUP_ENTRY")
+				{
+					errorMsg = "already has advice";
+					return connection.query(updateSQL, updateData, function(err, result){
+						query();
+					})
+				}
+				else return printError(err, data.token, errorMsg);
 			}
-			connection.query(querySQL, [data.rid, data.token], function(err, result){
-				var actionName = "sendAdvice";
-				notifyRoomMember(data.rid, actionName, result, function(err){
-					if(err)printError(err, data.token, "unable to mqtt other member to send advice");
+			query();
+			function query(){
+				connection.query(querySQL, [data.rid, data.token], function(err, result){
+					var actionName = "sendAdvice";
+					notifyRoomMember(data.rid, actionName, result, function(err){
+						if(err)printError(err, data.token, "unable to mqtt other member to send advice");
+					})
 				})
-			})
+			}
 		})
 	});
 }

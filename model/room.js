@@ -22,7 +22,7 @@ function create(response, data)
 		FROM user													\
 		WHERE token = ?";
 	var queryRoomInfoSQL = "SELECT rid, title, UNIX_TIMESTAMP(time) as time, 	\
-		masterUid, name	as masterName, photo									\
+		masterUid, name	as masterName, photo AS masterPhoto						\
 		FROM room, user 														\
 		WHERE rid = ? and user.uid = masterUid";
 	response.end();
