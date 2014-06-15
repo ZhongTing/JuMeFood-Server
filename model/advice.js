@@ -8,7 +8,9 @@ var message = require("./message");
 
 function list(response, data)
 {
-	var sql = "SELECT * FROM  `roomadvice` NATURAL JOIN store WHERE rid = ?";
+	var sql = "SELECT uid, a.sid, name, price, customName 	\
+		FROM  `roomadvice` as a LEFT JOIN store 			\
+		ON a.sid = store.sid WHERE rid = ?";
 	var roomSQL = "SELECT rid, goalUid FROM room WHERE rid = ?";
 	response.end();
 	connection.query(sql, [data.rid], function(err, advices){
@@ -88,7 +90,8 @@ function go(response, data)
 		( SELECT COUNT(*) AS count FROM roommember WHERE rid = ?) AS m";
 	var queryAdviceSQL = "SELECT r.*, s.name 	\
 		FROM roomadvice as r 					\
-		natural join store as s 				\
+		LEFT join store as s 					\
+		ON r.sid = s.sid						\
 		WHERE rid = ?"
 	response.end();
 	connection.query(infoSQL, [data.token, data.rid, data.rid], function(err, info){
