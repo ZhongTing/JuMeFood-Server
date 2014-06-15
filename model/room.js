@@ -93,11 +93,11 @@ function quit(response, data)
 	checkRoomMemberStatus(data.rid, data.token, 'accept', function(err){
 		if(err)return printError(err, data.token, "not in room");
 		
-		updateMemberStatus(data, updateStatus, errorMsg, actionName, true);
+		updateMemberStatus(data, updateStatus, errorMsg, actionName, true, false);
 	});
 }
 
-function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
+function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf, mqttMember)
 {
 	var sql = "UPDATE roommember as m, user		\
 		SET status = '"+updateStatus+"'			\
@@ -120,9 +120,12 @@ function updateMemberStatus(data, updateStatus, errorMsg, actionName, mqttSelf)
 				if(err)return printError(err, data.token, errorMsg);
 				if(mqttSelf)
 					mqtt.action(data.token, actionName, boardcastData);
-				for(var i in memberResult)
+				if(mqttMember)
 				{
-					mqtt.action(memberResult[i].token, actionName, boardcastData);
+					for(var i in memberResult)
+					{
+						mqtt.action(memberResult[i].token, actionName, boardcastData);
+					}
 				}
 			})
 		})
