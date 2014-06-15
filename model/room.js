@@ -41,7 +41,7 @@ function create(response, data)
 					for(var i in memberInfo)
 					{
 						var gcmMsg = roomInfo[0].masterName + " Invite you to join "+ roomInfo[0].title;
-						mqtt.action(memberInfo[i].token, "newInvited", roomInfo[0]);
+						mqtt.action(memberInfo[i].token, "listRooms", roomInfo);
 						gcm.send(memberInfo[i].gcmId, gcmMsg);
 					}
 				})
